@@ -377,7 +377,7 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
     }
 
     // Switch to the design page
-    figma.currentPage = designPage;
+    await figma.setCurrentPageAsync(designPage);
     console.log('Using page:', designPage.name);
   } catch (error) {
     console.error('Error with page creation:', error);

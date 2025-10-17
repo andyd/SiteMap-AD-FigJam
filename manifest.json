@@ -1,10 +1,11 @@
 {
   "name": "Sitemap Builder",
-  "id": "1234567892",
+  "id": "1560864847810984880",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "editorType": ["figjam", "figma"],
+  "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": [
       "https://api.allorigins.win"
