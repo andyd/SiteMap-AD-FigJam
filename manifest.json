@@ -4,6 +4,12 @@
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
-  "editorType": ["figjam", "figma"]
+  "editorType": ["figjam", "figma"],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://api.allorigins.win"
+    ],
+    "reasoning": "Required for website import feature to fetch sitemap.xml files and crawl websites. Uses public CORS proxy to bypass browser restrictions. Feature is optional and user-initiated."
+  }
 }
 
