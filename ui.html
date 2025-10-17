@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 16px;
+      background: #fff;
+    }
+
+    h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel h3 {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #666;
+    }
+
+    #textEditor {
+      width: 100%;
+      min-height: 300px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    #textEditor:focus {
+      outline: none;
+      border-color: #18A0FB;
+    }
+
+    #preview {
+      width: 100%;
+      min-height: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      background: #fafafa;
+      overflow: auto;
+      font-size: 11px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #createBtn {
+      background: #18A0FB;
+      color: white;
+    }
+
+    #createBtn:hover {
+      background: #0d8fe8;
+    }
+
+    #createBtn:active {
+      background: #0a7dce;
+    }
+
+    #cancelBtn {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    #cancelBtn:hover {
+      background: #e0e0e0;
+    }
+
+    .info {
+      font-size: 11px;
+      color: #999;
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f8f8;
+      border-radius: 4px;
+    }
+
+    .error {
+      color: #f24822;
+      font-size: 11px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-content h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .modal-content p {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+    }
+
+    #overwriteBtn {
+      background: #f24822;
+      color: white;
+    }
+
+    #overwriteBtn:hover {
+      background: #d93d1a;
+    }
+
+    #newBtn {
+      background: #18A0FB;
+      color: white;
+    }
+
+    #newBtn:hover {
+      background: #0d8fe8;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #856404;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .warning.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>Sitemap Builder</h2>
+
+  <div class="warning" id="warning"></div>
+
+  <!-- Import from URL section -->
+  <div style="margin-bottom: 16px; padding: 12px; background: #f8f8f8; border-radius: 4px;">
+    <div style="display: flex; gap: 8px; align-items: flex-end;">
+      <div style="flex: 1;">
+        <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Import from Website</label>
+        <input type="url" id="urlInput" placeholder="https://example.com" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div style="width: 80px;">
+        <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Depth</label>
+        <input type="number" id="depthInput" value="2" min="1" max="5" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <button id="importBtn" style="padding: 6px 16px; font-size: 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">Import</button>
+    </div>
+    <div id="importStatus" style="font-size: 10px; color: #666; margin-top: 6px; display: none;"></div>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <h3>Text Editor</h3>
+      <textarea id="textEditor" placeholder="Enter your sitemap structure:
+
+Home
+  About
+  Services
+    Consulting
+    Design
+  Contact">Home
+  About
+  Services
+    Consulting
+    Design
+  Contact</textarea>
+      <div class="error" id="error"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Preview</h3>
+      <div id="preview">Enter text on the left to see structure preview...</div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button id="createBtn">Save Sitemap</button>
+    <button id="exportBtn" style="background: #6c757d; color: white;">Export to Figma</button>
+    <button id="cancelBtn">Cancel</button>
+  </div>
+
+  <div class="info">
+    💡 Use spaces or tabs to indent. Each level represents a page hierarchy.
+  </div>
+
+  <!-- Modal for save options -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Save Changes</h3>
+      <p id="modalMessage">How would you like to save your sitemap?</p>
+      <div class="modal-buttons">
+        <button id="updateBtn" style="background: #18A0FB; color: white;">Update Existing</button>
+        <button id="newBtn">Create New</button>
+        <button id="modalCancelBtn" style="background: #f0f0f0; color: #333;">Cancel</button>
+      </div>
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+        <button id="deleteAllBtn" style="background: transparent; color: #f24822; border: 1px solid #f24822; font-size: 11px; padding: 6px 12px;">Delete All & Start Fresh</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for frame size selection -->
+  <div class="modal" id="frameSizeModal">
+    <div class="modal-content">
+      <h3>Export to Figma Design File</h3>
+      <p>Select the frame size for your page designs:</p>
+
+      <div style="margin-bottom: 16px;">
+        <select id="frameSizeSelect" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px;">
+          <optgroup label="Desktop">
+            <option value="1920,1080">Desktop - 1920 × 1080</option>
+            <option value="1440,1024">Desktop HD - 1440 × 1024</option>
+            <option value="1366,768">Desktop - 1366 × 768</option>
+          </optgroup>
+          <optgroup label="Tablet">
+            <option value="1024,1366">iPad Pro 12.9" - 1024 × 1366</option>
+            <option value="834,1194">iPad Pro 11" - 834 × 1194</option>
+            <option value="810,1080">iPad Air - 810 × 1080</option>
+            <option value="768,1024">iPad - 768 × 1024</option>
+          </optgroup>
+          <optgroup label="Mobile">
+            <option value="430,932">iPhone 14 Pro Max - 430 × 932</option>
+            <option value="393,852">iPhone 14 Pro - 393 × 852</option>
+            <option value="390,844">iPhone 14 - 390 × 844</option>
+            <option value="375,667">iPhone SE - 375 × 667</option>
+          </optgroup>
+          <optgroup label="Custom">
+            <option value="custom">Custom Size...</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div id="customSizeInputs" style="display: none; margin-bottom: 16px; gap: 8px;">
+        <div style="display: flex; gap: 8px;">
+          <div style="flex: 1;">
+            <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Width</label>
+            <input type="number" id="customWidth" placeholder="1920" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Height</label>
+            <input type="number" id="customHeight" placeholder="1080" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="confirmExportBtn" style="background: #18A0FB; color: white;">Create Figma File</button>
+        <button id="cancelExportBtn" style="background: #f0f0f0; color: #333;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const textEditor = document.getElementById('textEditor');
+    const preview = document.getElementById('preview');
+    const createBtn = document.getElementById('createBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const errorDiv = document.getElementById('error');
+    const warningDiv = document.getElementById('warning');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const updateBtn = document.getElementById('updateBtn');
+    const newBtn = document.getElementById('newBtn');
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const urlInput = document.getElementById('urlInput');
+    const depthInput = document.getElementById('depthInput');
+    const importBtn = document.getElementById('importBtn');
+    const importStatus = document.getElementById('importStatus');
+    const exportBtn = document.getElementById('exportBtn');
+    const frameSizeModal = document.getElementById('frameSizeModal');
+    const frameSizeSelect = document.getElementById('frameSizeSelect');
+    const customSizeInputs = document.getElementById('customSizeInputs');
+    const customWidth = document.getElementById('customWidth');
+    const customHeight = document.getElementById('customHeight');
+    const confirmExportBtn = document.getElementById('confirmExportBtn');
+    const cancelExportBtn = document.getElementById('cancelExportBtn');
+
+    let existingSitemapCount = 0;
+    let pendingNodes = null;
+    let isEditingExisting = false;
+
+    // Fetch and parse sitemap.xml
+    async function fetchSitemap(baseUrl) {
+      importStatus.textContent = 'Fetching sitemap.xml...';
+      importStatus.style.display = 'block';
+      importStatus.style.color = '#666';
+
+      try {
+        // Normalize base URL
+        const urlObj = new URL(baseUrl);
+        const sitemapUrl = `${urlObj.origin}/sitemap.xml`;
+
+        // Try with CORS proxy first
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const proxiedUrl = corsProxy + encodeURIComponent(sitemapUrl);
+
+        importStatus.textContent = `Checking for sitemap.xml...`;
+
+        const response = await fetch(proxiedUrl);
+
+        if (!response.ok) {
+          throw new Error('NO_SITEMAP');
+        }
+
+        const xmlText = await response.text();
+        console.log('Fetched XML:', xmlText.substring(0, 500));
+
+        // Check if response is actually XML
+        if (!xmlText.includes('<?xml') && !xmlText.includes('<urlset') && !xmlText.includes('<sitemapindex')) {
+          throw new Error('NO_SITEMAP');
+        }
+
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+        // Check for XML parsing errors
+        const parseError = xmlDoc.querySelector('parsererror');
+        if (parseError) {
+          console.error('XML parse error:', parseError);
+          throw new Error('NO_SITEMAP');
+        }
+
+        // Check if this is a sitemap index (contains references to other sitemaps)
+        const sitemapNodes = xmlDoc.querySelectorAll('sitemap > loc');
+
+        if (sitemapNodes.length > 0) {
+          // This is a sitemap index, fetch all child sitemaps
+          console.log('Found sitemap index with', sitemapNodes.length, 'sitemaps');
+          importStatus.textContent = `Found sitemap index with ${sitemapNodes.length} sitemaps. Fetching...`;
+
+          const allUrls = [];
+          const sitemapUrls = Array.from(sitemapNodes).map(node => node.textContent.trim());
+
+          // Fetch each sitemap (limit to first 5 to avoid too many requests)
+          for (let i = 0; i < Math.min(sitemapUrls.length, 5); i++) {
+            const childSitemapUrl = sitemapUrls[i];
+            console.log('Fetching child sitemap:', childSitemapUrl);
+            importStatus.textContent = `Fetching sitemap ${i + 1}/${Math.min(sitemapUrls.length, 5)}...`;
+
+            try {
+              const childProxiedUrl = corsProxy + encodeURIComponent(childSitemapUrl);
+              const childResponse = await fetch(childProxiedUrl);
+
+              if (childResponse.ok) {
+                const childXmlText = await childResponse.text();
+                const childXmlDoc = parser.parseFromString(childXmlText, 'text/xml');
+
+                // Extract URLs from this child sitemap
+                const childUrls = Array.from(childXmlDoc.querySelectorAll('url > loc'))
+                  .map(loc => loc.textContent.trim())
+                  .filter(url => url && url.startsWith('http'));
+
+                console.log('Found', childUrls.length, 'URLs in child sitemap');
+                allUrls.push(...childUrls);
+              }
+            } catch (e) {
+              console.error('Error fetching child sitemap:', e);
+            }
+          }
+
+          if (allUrls.length > 0) {
+            importStatus.textContent = `✓ Found ${allUrls.length} URLs from ${Math.min(sitemapUrls.length, 5)} sitemaps`;
+            return allUrls;
+          }
+        }
+
+        // Not a sitemap index, extract URLs directly from <url><loc> elements
+        let urls = Array.from(xmlDoc.querySelectorAll('url > loc'))
+          .map(loc => loc.textContent.trim())
+          .filter(url => url && url.startsWith('http'));
+
+        console.log('Extracted URLs:', urls.length);
+
+        if (urls.length === 0) {
+          console.log('No URLs found in sitemap');
+          throw new Error('NO_SITEMAP');
+        }
+
+        importStatus.textContent = `✓ Found sitemap with ${urls.length} URLs`;
+        return urls;
+
+      } catch (error) {
+        console.error('Sitemap fetch error:', error);
+        // Return null to indicate no sitemap, don't throw
+        return null;
+      }
+    }
+
+    // Crawl website by fetching pages and extracting links
+    async function crawlWebsite(baseUrl, maxDepth) {
+      const corsProxy = 'https://api.allorigins.win/raw?url=';
+      const visited = new Set();
+      const urlMap = new Map(); // url -> {title, children}
+      const urlObj = new URL(baseUrl);
+      const baseDomain = urlObj.hostname;
+
+      importStatus.textContent = 'Crawling website (no sitemap.xml found)...';
+      importStatus.style.color = '#666';
+
+      async function fetchPage(url) {
+        try {
+          const proxiedUrl = corsProxy + encodeURIComponent(url);
+          const response = await fetch(proxiedUrl);
+          if (!response.ok) return null;
+
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          // Get page title
+          const title = doc.querySelector('title')?.textContent?.trim() ||
+                       url.split('/').filter(s => s).pop() || 'Page';
+
+          // Get all links
+          const links = Array.from(doc.querySelectorAll('a[href]'))
+            .map(a => {
+              try {
+                const href = a.getAttribute('href');
+                const linkUrl = new URL(href, url);
+                // Only same domain, no fragments, no query params for cleaner map
+                if (linkUrl.hostname === baseDomain) {
+                  return linkUrl.origin + linkUrl.pathname;
+                }
+              } catch (e) {}
+              return null;
+            })
+            .filter(link => link && !link.match(/\.(pdf|jpg|png|gif|zip|css|js)$/i));
+
+          return { title, links: Array.from(new Set(links)) };
+        } catch (error) {
+          console.error('Error fetching:', url, error);
+          return null;
+        }
+      }
+
+      // BFS crawl
+      const queue = [{ url: baseUrl, depth: 0 }];
+      visited.add(baseUrl);
+
+      while (queue.length > 0 && visited.size < 50) { // Limit to 50 pages
+        const { url, depth } = queue.shift();
+
+        if (depth > maxDepth) continue;
+
+        importStatus.textContent = `Crawling (${visited.size}/50): ${url.substring(0, 50)}...`;
+
+        const pageData = await fetchPage(url);
+        if (!pageData) continue;
+
+        urlMap.set(url, { title: pageData.title, children: [] });
+
+        // Add new links to queue
+        if (depth < maxDepth) {
+          for (const link of pageData.links.slice(0, 20)) {
+            if (!visited.has(link)) {
+              visited.add(link);
+              queue.push({ url: link, depth: depth + 1 });
+            }
+          }
+        }
+      }
+
+      // Convert to URL list
+      const urls = Array.from(visited);
+      importStatus.textContent = `✓ Crawled ${urls.length} pages`;
+
+      return urls;
+    }
+
+    // Build tree structure from URL paths
+    function buildTreeFromUrls(urls, maxDepth) {
+      const tree = {
+        name: 'Home',
+        path: '/',
+        depth: 0,
+        children: []
+      };
+
+      const pathMap = new Map();
+      pathMap.set('/', tree);
+
+      // Process each URL
+      urls.forEach(url => {
+        try {
+          const urlObj = new URL(url);
+          const pathname = urlObj.pathname;
+
+          // Skip root
+          if (pathname === '/' || pathname === '') return;
+
+          // Split path into segments
+          const segments = pathname.split('/').filter(s => s);
+
+          // Build tree structure
+          let currentPath = '';
+          let currentNode = tree;
+
+          segments.forEach((segment, index) => {
+            currentPath += '/' + segment;
+            const depth = index + 1;
+
+            // Skip if exceeds max depth
+            if (depth > maxDepth) return;
+
+            // Clean segment name (remove extensions, decode URL encoding)
+            let name = decodeURIComponent(segment)
+              .replace(/\.html?$/, '')
+              .replace(/[-_]/g, ' ')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+
+            // Check if node already exists
+            if (!pathMap.has(currentPath)) {
+              const newNode = {
+                name: name,
+                path: currentPath,
+                depth: depth,
+                children: []
+              };
+
+              currentNode.children.push(newNode);
+              pathMap.set(currentPath, newNode);
+              currentNode = newNode;
+            } else {
+              currentNode = pathMap.get(currentPath);
+            }
+          });
+        } catch (error) {
+          console.error('Error processing URL:', url, error);
+        }
+      });
+
+      return tree;
+    }
+
+    // Convert tree to indented text
+    function treeToText(node, depth = 0) {
+      const lines = [];
+      const indent = '  '.repeat(depth);
+
+      lines.push(indent + node.name);
+
+      // Sort children alphabetically
+      const sortedChildren = node.children.sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedChildren.forEach(child => {
+        lines.push(treeToText(child, depth + 1));
+      });
+
+      return lines.join('\n');
+    }
+
+    // Parse text into tree structure
+    function parseText(text) {
+      const lines = text.split('\n').filter(line => line.trim());
+      const nodes = [];
+      const errors = [];
+      let prevDepth = -1;
+
+      lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        // Calculate depth (number of leading spaces/tabs)
+        const match = line.match(/^(\s*)/);
+        const leadingSpaces = match[1];
+        const depth = leadingSpaces.replace(/\t/g, '  ').length / 2;
+
+        // Validate depth doesn't skip levels
+        if (depth > prevDepth + 1) {
+          errors.push(`Line ${index + 1}: Indentation skips a level`);
+        }
+
+        nodes.push({
+          name: trimmed,
+          depth: Math.floor(depth),
+          line: index + 1
+        });
+
+        prevDepth = Math.floor(depth);
+      });
+
+      return { nodes, errors };
+    }
+
+    // Generate preview text
+    function updatePreview() {
+      const text = textEditor.value;
+      const { nodes, errors } = parseText(text);
+
+      if (errors.length > 0) {
+        errorDiv.textContent = errors.join(', ');
+        errorDiv.classList.add('show');
+      } else {
+        errorDiv.classList.remove('show');
+      }
+
+      if (nodes.length === 0) {
+        preview.innerHTML = '<em style="color: #999;">Enter text on the left to see structure preview...</em>';
+        return;
+      }
+
+      let html = '<strong>Parsed Structure:</strong><br><br>';
+      nodes.forEach(node => {
+        const indent = '  '.repeat(node.depth);
+        html += `${indent}└─ ${node.name} <span style="color: #999;">(Level ${node.depth})</span><br>`;
+      });
+
+      html += `<br><strong>Stats:</strong> ${nodes.length} pages, ${Math.max(...nodes.map(n => n.depth)) + 1} levels deep`;
+
+      preview.innerHTML = html;
+    }
+
+    // Update preview on input
+    textEditor.addEventListener('input', updatePreview);
+
+    // Initial preview
+    updatePreview();
+
+    // Listen for messages from plugin code
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'init') {
+        existingSitemapCount = msg.existingSitemaps || 0;
+
+        // Load existing sitemap text if available
+        if (msg.sitemapText) {
+          textEditor.value = msg.sitemapText;
+          isEditingExisting = true;
+          updatePreview();
+        }
+
+        updateWarning();
+      } else if (msg.type === 'existing-count') {
+        existingSitemapCount = msg.count || 0;
+        updateWarning();
+      }
+    };
+
+    function updateWarning() {
+      if (isEditingExisting) {
+        warningDiv.textContent = '✏️ Editing existing sitemap';
+        warningDiv.style.background = '#d1ecf1';
+        warningDiv.style.borderColor = '#bee5eb';
+        warningDiv.style.color = '#0c5460';
+        warningDiv.classList.add('show');
+      } else if (existingSitemapCount > 0) {
+        warningDiv.textContent = existingSitemapCount === 1
+          ? '⚠️ There is 1 existing sitemap on this page'
+          : `⚠️ There are ${existingSitemapCount} existing sitemaps on this page`;
+        warningDiv.style.background = '#fff3cd';
+        warningDiv.style.borderColor = '#ffc107';
+        warningDiv.style.color = '#856404';
+        warningDiv.classList.add('show');
+      } else {
+        warningDiv.classList.remove('show');
+      }
+    }
+
+    function showModal(nodes) {
+      pendingNodes = nodes;
+
+      if (isEditingExisting) {
+        modalTitle.textContent = 'Save Changes';
+        modalMessage.textContent = 'You\'re editing an existing sitemap. Update it or create a new one?';
+        updateBtn.textContent = 'Update Existing';
+        updateBtn.style.display = 'block';
+      } else {
+        modalTitle.textContent = 'Existing Sitemaps Found';
+        const count = existingSitemapCount;
+        modalMessage.textContent = count === 1
+          ? 'There is already a sitemap on this page. What would you like to do?'
+          : `There are ${count} existing sitemaps on this page. What would you like to do?`;
+        updateBtn.textContent = 'Replace Latest';
+        updateBtn.style.display = 'block';
+      }
+
+      modal.classList.add('show');
+    }
+
+    function hideModal() {
+      modal.classList.remove('show');
+      pendingNodes = null;
+    }
+
+    function createSitemap(mode) {
+      parent.postMessage({
+        pluginMessage: {
+          type: 'create-sitemap',
+          nodes: pendingNodes,
+          mode: mode
+        }
+      }, '*');
+      hideModal();
+    }
+
+    // Create button handler
+    createBtn.onclick = () => {
+      const text = textEditor.value;
+      const { nodes, errors } = parseText(text);
+
+      if (errors.length > 0) {
+        errorDiv.textContent = 'Please fix errors before creating sitemap';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      if (nodes.length === 0) {
+        errorDiv.textContent = 'Please enter some content';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      // Check if there are existing sitemaps
+      if (existingSitemapCount > 0) {
+        showModal(nodes);
+      } else {
+        // No existing sitemaps, create directly
+        parent.postMessage({
+          pluginMessage: {
+            type: 'create-sitemap',
+            nodes: nodes,
+            mode: 'new'
+          }
+        }, '*');
+      }
+    };
+
+    // Modal button handlers
+    updateBtn.onclick = () => {
+      createSitemap('update');
+      isEditingExisting = false;
+    };
+
+    newBtn.onclick = () => {
+      createSitemap('new');
+      isEditingExisting = false;
+    };
+
+    deleteAllBtn.onclick = () => {
+      if (confirm('Are you sure you want to delete all existing sitemaps? This cannot be undone.')) {
+        createSitemap('delete-all');
+        isEditingExisting = false;
+      }
+    };
+
+    modalCancelBtn.onclick = () => {
+      hideModal();
+    };
+
+    // Import button handler
+    importBtn.onclick = async () => {
+      let url = urlInput.value.trim();
+      const maxDepth = parseInt(depthInput.value) || 2;
+
+      if (!url) {
+        importStatus.textContent = '❌ Please enter a website URL';
+        importStatus.style.color = '#f24822';
+        importStatus.style.display = 'block';
+        return;
+      }
+
+      // Auto-add https:// if no protocol specified
+      if (!url.match(/^https?:\/\//i)) {
+        url = 'https://' + url;
+      }
+
+      console.log('Import clicked:', url, 'depth:', maxDepth);
+
+      try {
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importing...';
+
+        let urls = null;
+
+        console.log('Attempting to fetch sitemap...');
+        // Try fetching sitemap.xml first
+        urls = await fetchSitemap(url);
+        console.log('Sitemap result:', urls ? `${urls.length} URLs` : 'null');
+
+        // If no sitemap, fall back to crawling
+        if (!urls) {
+          console.log('No sitemap found, starting crawler...');
+          importStatus.textContent = 'No sitemap.xml found. Crawling website...';
+          importStatus.style.color = '#ff9800';
+          urls = await crawlWebsite(url, maxDepth);
+          console.log('Crawler result:', urls ? `${urls.length} URLs` : 'null');
+        }
+
+        if (!urls || urls.length === 0) {
+          throw new Error('No pages found. Please check the URL and try again.');
+        }
+
+        console.log('Building tree from', urls.length, 'URLs...');
+        // Build tree from URLs
+        const tree = buildTreeFromUrls(urls, maxDepth);
+        console.log('Tree built:', tree);
+
+        // Convert to text
+        const sitemapText = treeToText(tree);
+        console.log('Generated text:', sitemapText.substring(0, 100));
+
+        // Load into editor
+        textEditor.value = sitemapText;
+        isEditingExisting = false;
+        updatePreview();
+
+        importStatus.textContent = `✅ Imported ${urls.length} pages successfully!`;
+        importStatus.style.color = '#28a745';
+
+        // Hide status after 3 seconds
+        setTimeout(() => {
+          importStatus.style.display = 'none';
+        }, 3000);
+
+      } catch (error) {
+        const errorMsg = error.message || 'Failed to import website';
+        importStatus.textContent = `❌ ${errorMsg}`;
+        importStatus.style.color = '#f24822';
+        console.error('Import error:', error);
+        console.error('Error stack:', error.stack);
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = 'Import';
+      }
+    };
+
+    // Cancel button handler
+    cancelBtn.onclick = () => {
+      parent.postMessage({
+        pluginMessage: {
+          type: 'cancel'
+        }
+      }, '*');
+    };
+
+    // Export to Figma button handler
+    exportBtn.onclick = () => {
+      const text = textEditor.value;
+      const { nodes, errors } = parseText(text);
+
+      if (errors.length > 0) {
+        errorDiv.textContent = 'Please fix errors before exporting';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      if (nodes.length === 0) {
+        errorDiv.textContent = 'Please enter some content';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      // Show frame size selection modal
+      frameSizeModal.classList.add('show');
+    };
+
+    // Frame size select change handler
+    frameSizeSelect.onchange = () => {
+      if (frameSizeSelect.value === 'custom') {
+        customSizeInputs.style.display = 'block';
+      } else {
+        customSizeInputs.style.display = 'none';
+      }
+    };
+
+    // Confirm export button handler
+    confirmExportBtn.onclick = () => {
+      let width, height;
+
+      if (frameSizeSelect.value === 'custom') {
+        width = parseInt(customWidth.value);
+        height = parseInt(customHeight.value);
+
+        if (!width || !height || width < 1 || height < 1) {
+          alert('Please enter valid width and height values');
+          return;
+        }
+      } else {
+        const parts = frameSizeSelect.value.split(',');
+        width = parseInt(parts[0]);
+        height = parseInt(parts[1]);
+      }
+
+      const text = textEditor.value;
+      const { nodes } = parseText(text);
+
+      // Send export message to plugin code
+      parent.postMessage({
+        pluginMessage: {
+          type: 'export-to-figma',
+          nodes: nodes,
+          frameWidth: width,
+          frameHeight: height
+        }
+      }, '*');
+
+      // Close modal
+      frameSizeModal.classList.remove('show');
+    };
+
+    // Cancel export button handler
+    cancelExportBtn.onclick = () => {
+      frameSizeModal.classList.remove('show');
+    };
+  </script>
+</body>
+</html>

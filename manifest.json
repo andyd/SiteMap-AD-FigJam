@@ -1,0 +1,9 @@
+{
+  "name": "Sitemap Builder",
+  "id": "1234567892",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figjam", "figma"]
+}
+
