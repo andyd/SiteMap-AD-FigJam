@@ -25,8 +25,9 @@ function checkExistingPageDesigns() {
   const designPage = figma.root.children.find(page => page.name === 'Page Designs');
   if (!designPage) return pageDesigns;
   
-  // Look for sections or frames with the "PAGE_DESIGNS" plugin data
+  // Look for sections or frames with the "pageDesigns" plugin data
   for (const node of designPage.children) {
+    // Check both SECTION and FRAME types for compatibility
     if ((node.type === 'SECTION' || node.type === 'FRAME') && 
         node.getPluginData('pageDesigns') === 'true') {
       pageDesigns.push(node);
@@ -371,21 +372,41 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
   const containerWidth = maxX + PADDING * 2;
   const containerHeight = maxY + PADDING * 2;
 
-  // Create container section
-  const section = figma.createSection();
-  section.name = `Page Designs (${nodes.length} pages, ${frameWidth}×${frameHeight})`;
-  section.x = 0;
-  section.y = 0;
-  section.resize(containerWidth, containerHeight);
-  section.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 1 }, opacity: 0.5 }];
+  // Create container (section or frame depending on support)
+  let container;
+  try {
+    // Try to create a section (available in newer Figma/FigJam)
+    if (typeof figma.createSection === 'function') {
+      container = figma.createSection();
+      console.log('Created section container');
+    } else {
+      throw new Error('Sections not supported');
+    }
+  } catch (error) {
+    // Fallback: create a large frame as container
+    console.log('Sections not supported, using frame container');
+    container = figma.createFrame();
+    container.clipsContent = false;
+    console.log('Created frame container');
+  }
+  
+  container.name = `Page Designs (${nodes.length} pages, ${frameWidth}×${frameHeight})`;
+  container.x = 0;
+  container.y = 0;
+  container.resize(containerWidth, containerHeight);
+  
+  // Set background (works for both sections and frames)
+  if (container.fills !== figma.mixed) {
+    container.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 1 }, opacity: 0.5 }];
+  }
 
-  // Store metadata on section
-  section.setPluginData('pageDesigns', 'true');
-  section.setPluginData('sitemapText', nodes.map(n => '  '.repeat(n.depth) + n.name).join('\n'));
-  section.setPluginData('createdAt', new Date().toISOString());
-  section.setPluginData('pageCount', nodes.length.toString());
-  section.setPluginData('frameWidth', frameWidth.toString());
-  section.setPluginData('frameHeight', frameHeight.toString());
+  // Store metadata on container
+  container.setPluginData('pageDesigns', 'true');
+  container.setPluginData('sitemapText', nodes.map(n => '  '.repeat(n.depth) + n.name).join('\n'));
+  container.setPluginData('createdAt', new Date().toISOString());
+  container.setPluginData('pageCount', nodes.length.toString());
+  container.setPluginData('frameWidth', frameWidth.toString());
+  container.setPluginData('frameHeight', frameHeight.toString());
 
   console.log('Creating', nodes.length, 'page design frames...');
 
@@ -435,16 +456,16 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
       frame.appendChild(depthLabel);
     }
 
-    // Add to section
-    section.appendChild(frame);
+    // Add to container
+    container.appendChild(frame);
     pageFrames.push(frame);
   }
 
-  console.log('Created', pageFrames.length, 'design frames in section');
+  console.log('Created', pageFrames.length, 'design frames in container');
 
-  // Select section and zoom to view
-  designPage.selection = [section];
-  figma.viewport.scrollAndZoomIntoView([section]);
+  // Select container and zoom to view
+  designPage.selection = [container];
+  figma.viewport.scrollAndZoomIntoView([container]);
 
-  console.log('Export complete! Section:', section.name);
+  console.log('Export complete! Container:', container.name);
 }
