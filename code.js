@@ -149,10 +149,20 @@ figma.ui.onmessage = async (msg) => {
     const frameHeight = msg.frameHeight;
 
     try {
+      // Check if we're in FigJam
+      if (figma.editorType === 'figjam') {
+        figma.notify('⚠️ Export creates frames in current FigJam file. For best results, run this plugin in a Figma Design file.', { timeout: 5000 });
+      }
+      
       await exportToFigmaDesign(nodes, frameWidth, frameHeight);
-      figma.notify('✅ Figma design file created successfully!');
+      
+      if (figma.editorType === 'figjam') {
+        figma.notify('✅ Page design frames created in current file!');
+      } else {
+        figma.notify('✅ Page design frames created successfully!');
+      }
     } catch (error) {
-      figma.notify('❌ Error creating Figma file: ' + error.message);
+      figma.notify('❌ Error creating frames: ' + error.message);
       console.error(error);
     }
   }

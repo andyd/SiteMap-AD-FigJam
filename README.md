@@ -23,7 +23,7 @@ A FigJam plugin that creates visual website sitemaps using sticky notes and nati
 ### Creating a Sitemap from Text
 
 1. Open any FigJam file
-2. Go to `Plugins` → `Development` → `Sitemap Builder (FigJam)`
+2. Go to `Plugins` → `Development` → `Sitemap Builder`
 3. Enter your sitemap structure using indentation:
    ```
    Home
@@ -33,8 +33,8 @@ A FigJam plugin that creates visual website sitemaps using sticky notes and nati
        Design
      Contact
    ```
-4. Click "Generate Sitemap"
-5. Sticky notes with connectors will be created on the canvas
+4. Click "Save Sitemap"
+5. Rectangles with connectors will be created on the canvas
 
 ### Importing from a Website
 
@@ -52,9 +52,31 @@ A FigJam plugin that creates visual website sitemaps using sticky notes and nati
 2. Make your changes in the text editor
 3. Click "Generate Sitemap" and choose "Update Existing Sitemap"
 
+### Exporting to Page Design Frames
+
+The "Export to Figma" button creates individual page design frames from your sitemap:
+
+**In FigJam:**
+1. Create your sitemap as usual
+2. Click "Export to Figma"
+3. Choose frame size (Desktop/Tablet/Mobile)
+4. Frames will be created in the current FigJam file
+
+**For Dedicated Figma Design Files:**
+1. Open a **Figma Design file** (not FigJam)
+2. Run the plugin
+3. Paste your sitemap text or create new
+4. Click "Export to Figma"
+5. Page design frames will be created in the Figma file
+
+Each exported frame includes:
+- Page name as title (32px)
+- Hierarchy level indicator for child pages
+- Ready-to-design blank canvas
+
 ### Moving and Reorganizing
 
-- Simply drag sticky notes to reposition them
+- Simply drag frames to reposition them
 - Connectors automatically update and stay attached
 - Move parent nodes and all connections remain intact
 
