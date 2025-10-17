@@ -332,22 +332,52 @@ async function createSitemap(nodes) {
 async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
   console.log('Exporting to Figma design with frame size:', frameWidth, 'x', frameHeight);
 
-  // Load font
-  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-  await figma.loadFontAsync({ family: "Inter", style: "Medium" });
-
-  // Find or create the "Page Designs" page
-  let designPage = figma.root.children.find(page => page.name === 'Page Designs');
-  
-  if (!designPage) {
-    designPage = figma.createPage();
-    designPage.name = 'Page Designs';
+  try {
+    // Load fonts
+    await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+    await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+    console.log('Fonts loaded');
+  } catch (error) {
+    console.error('Error loading fonts:', error);
+    throw new Error('Failed to load fonts: ' + error.message);
   }
 
-  // Switch to the design page
-  figma.currentPage = designPage;
+  // Find or create the "Page Designs" page
+  let designPage = null;
+  
+  try {
+    // Try to find existing "Page Designs" page
+    if (figma.root && figma.root.children) {
+      designPage = figma.root.children.find(page => page.name === 'Page Designs');
+      console.log('Found existing Page Designs page:', !!designPage);
+    }
+    
+    if (!designPage) {
+      // Try to create new page (may not work in FigJam)
+      if (typeof figma.createPage === 'function') {
+        console.log('Creating new Page Designs page...');
+        designPage = figma.createPage();
+        designPage.name = 'Page Designs';
+        console.log('Created new page:', designPage.name);
+      } else {
+        // Fallback: use current page
+        console.log('Cannot create new page, using current page');
+        designPage = figma.currentPage;
+      }
+    }
+
+    // Switch to the design page
+    figma.currentPage = designPage;
+    console.log('Using page:', designPage.name);
+  } catch (error) {
+    console.error('Error with page creation:', error);
+    // Fallback to current page if all else fails
+    console.log('Falling back to current page');
+    designPage = figma.currentPage;
+  }
 
   // Calculate layout
+  console.log('Calculating layout for', nodes.length, 'nodes...');
   const FRAME_SPACING = 100;
   const FRAMES_PER_ROW = 5;
   const pageFrames = [];
@@ -363,10 +393,12 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
       y: row * (frameHeight + FRAME_SPACING)
     });
   }
+  console.log('Calculated', positions.length, 'positions');
 
   // Calculate bounds for container
   const maxX = Math.max(...positions.map(p => p.x)) + frameWidth;
   const maxY = Math.max(...positions.map(p => p.y)) + frameHeight;
+  console.log('Container bounds: maxX=', maxX, 'maxY=', maxY);
   
   const PADDING = 100;
   const containerWidth = maxX + PADDING * 2;
