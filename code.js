@@ -17,6 +17,68 @@ function extractSitemapText(selection) {
   return null;
 }
 
+// Check for existing page design collections
+function checkExistingPageDesigns() {
+  const pageDesigns = [];
+  
+  // Look for "Page Designs" page
+  const designPage = figma.root.children.find(page => page.name === 'Page Designs');
+  if (!designPage) return pageDesigns;
+  
+  // Look for sections or frames with the "PAGE_DESIGNS" plugin data
+  for (const node of designPage.children) {
+    if ((node.type === 'SECTION' || node.type === 'FRAME') && 
+        node.getPluginData('pageDesigns') === 'true') {
+      pageDesigns.push(node);
+    }
+  }
+  
+  console.log('Found', pageDesigns.length, 'existing page design collections');
+  return pageDesigns;
+}
+
+// Extract sitemap structure from existing page designs
+function extractSitemapFromDesigns(designContainer) {
+  if (!designContainer) return null;
+  
+  try {
+    // Get the stored sitemap text from plugin data
+    const storedText = designContainer.getPluginData('sitemapText');
+    if (storedText) {
+      console.log('Extracted sitemap text from page designs');
+      return storedText;
+    }
+    
+    // Fallback: reconstruct from individual frames
+    console.log('Reconstructing sitemap from design frames...');
+    const nodeData = [];
+    
+    for (const child of designContainer.children) {
+      if (child.type === 'FRAME' && child.getPluginData('pageDepth')) {
+        const depth = parseInt(child.getPluginData('pageDepth') || '0');
+        const name = child.getPluginData('pageName') || child.name;
+        const index = parseInt(child.getPluginData('pageIndex') || '0');
+        
+        nodeData.push({ index, name, depth });
+      }
+    }
+    
+    // Sort by original index
+    nodeData.sort((a, b) => a.index - b.index);
+    
+    // Convert to indented text
+    const lines = nodeData.map(node => {
+      const indent = '  '.repeat(node.depth);
+      return indent + node.name;
+    });
+    
+    return lines.join('\n');
+  } catch (error) {
+    console.error('Error extracting sitemap from designs:', error);
+    return null;
+  }
+}
+
 // Send initial state to UI
 const existingSitemaps = checkExistingSitemaps();
 let sitemapText = '';
@@ -271,19 +333,12 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
 
   // Load font
   await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Medium" });
 
-  // Find or create a new page for the designs
-  let designPage = null;
-
-  // Look for existing "Page Designs" page
-  const existingPage = figma.root.children.find(function(page) {
-    return page.name === 'Page Designs';
-  });
-
-  if (existingPage) {
-    designPage = existingPage;
-  } else {
-    // Create new page using the root.appendChild pattern
+  // Find or create the "Page Designs" page
+  let designPage = figma.root.children.find(page => page.name === 'Page Designs');
+  
+  if (!designPage) {
     designPage = figma.createPage();
     designPage.name = 'Page Designs';
   }
@@ -291,54 +346,105 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
   // Switch to the design page
   figma.currentPage = designPage;
 
-  const frames = [];
+  // Calculate layout
   const FRAME_SPACING = 100;
-  let currentX = 0;
-  let currentY = 0;
-  let maxHeight = 0;
+  const FRAMES_PER_ROW = 5;
+  const pageFrames = [];
+  
+  // Calculate grid positions
+  const positions = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const row = Math.floor(i / FRAMES_PER_ROW);
+    const col = i % FRAMES_PER_ROW;
+    
+    positions.push({
+      x: col * (frameWidth + FRAME_SPACING),
+      y: row * (frameHeight + FRAME_SPACING)
+    });
+  }
+
+  // Calculate bounds for container
+  const maxX = Math.max(...positions.map(p => p.x)) + frameWidth;
+  const maxY = Math.max(...positions.map(p => p.y)) + frameHeight;
+  
+  const PADDING = 100;
+  const containerWidth = maxX + PADDING * 2;
+  const containerHeight = maxY + PADDING * 2;
+
+  // Create container section
+  const section = figma.createSection();
+  section.name = `Page Designs (${nodes.length} pages, ${frameWidth}×${frameHeight})`;
+  section.x = 0;
+  section.y = 0;
+  section.resize(containerWidth, containerHeight);
+  section.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 1 }, opacity: 0.5 }];
+
+  // Store metadata on section
+  section.setPluginData('pageDesigns', 'true');
+  section.setPluginData('sitemapText', nodes.map(n => '  '.repeat(n.depth) + n.name).join('\n'));
+  section.setPluginData('createdAt', new Date().toISOString());
+  section.setPluginData('pageCount', nodes.length.toString());
+  section.setPluginData('frameWidth', frameWidth.toString());
+  section.setPluginData('frameHeight', frameHeight.toString());
+
+  console.log('Creating', nodes.length, 'page design frames...');
 
   // Create a frame for each page
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
+    const pos = positions[i];
 
     // Create frame
     const frame = figma.createFrame();
     frame.name = node.name;
-    frame.x = currentX;
-    frame.y = currentY;
+    frame.x = pos.x + PADDING;
+    frame.y = pos.y + PADDING;
     frame.resize(frameWidth, frameHeight);
 
     // Add background fill
     frame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
 
+    // Store metadata on frame
+    frame.setPluginData('pageDepth', node.depth.toString());
+    frame.setPluginData('pageIndex', i.toString());
+    frame.setPluginData('pageName', node.name);
+
     // Add page title text
-    const text = figma.createText();
-    text.fontName = { family: "Inter", style: "Regular" };
-    text.characters = node.name;
-    text.fontSize = 24;
-    text.x = 40;
-    text.y = 40;
+    const titleText = figma.createText();
+    titleText.fontName = { family: "Inter", style: "Medium" };
+    titleText.characters = node.name;
+    titleText.fontSize = 32;
+    titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+    
+    // Position title
+    titleText.x = 60;
+    titleText.y = 60;
+    
+    frame.appendChild(titleText);
 
-    // Add text to frame
-    frame.appendChild(text);
-
-    frames.push(frame);
-
-    // Update position for next frame
-    currentX += frameWidth + FRAME_SPACING;
-    maxHeight = Math.max(maxHeight, frameHeight);
-
-    // Wrap to next row if needed (after 5 frames)
-    if ((i + 1) % 5 === 0) {
-      currentX = 0;
-      currentY += maxHeight + FRAME_SPACING;
-      maxHeight = 0;
+    // Add hierarchy indicator if not root
+    if (node.depth > 0) {
+      const depthLabel = figma.createText();
+      depthLabel.fontName = { family: "Inter", style: "Regular" };
+      depthLabel.characters = `Level ${node.depth}`;
+      depthLabel.fontSize = 14;
+      depthLabel.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
+      depthLabel.x = 60;
+      depthLabel.y = 105;
+      
+      frame.appendChild(depthLabel);
     }
+
+    // Add to section
+    section.appendChild(frame);
+    pageFrames.push(frame);
   }
 
-  // Select all frames and zoom to view
-  designPage.selection = frames;
-  figma.viewport.scrollAndZoomIntoView(frames);
+  console.log('Created', pageFrames.length, 'design frames in section');
 
-  console.log('Created', frames.length, 'design frames');
+  // Select section and zoom to view
+  designPage.selection = [section];
+  figma.viewport.scrollAndZoomIntoView([section]);
+
+  console.log('Export complete! Section:', section.name);
 }
