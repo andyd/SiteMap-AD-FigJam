@@ -422,75 +422,113 @@ async function exportToFigmaDesign(nodes, frameWidth, frameHeight) {
     console.log('Created frame container');
   }
   
-  container.name = `Page Designs (${nodes.length} pages, ${frameWidth}×${frameHeight})`;
-  container.x = 0;
-  container.y = 0;
-  container.resize(containerWidth, containerHeight);
-  
-  // Set background (works for both sections and frames)
-  if (container.fills !== figma.mixed) {
-    container.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 1 }, opacity: 0.5 }];
+  // Set container properties with error handling
+  try {
+    container.name = `Page Designs (${nodes.length} pages, ${frameWidth}×${frameHeight})`;
+    console.log('Set container name');
+    
+    container.x = 0;
+    container.y = 0;
+    console.log('Set container position');
+    
+    // Resize may not work on sections
+    if (typeof container.resize === 'function') {
+      container.resize(containerWidth, containerHeight);
+      console.log('Resized container to', containerWidth, 'x', containerHeight);
+    } else {
+      console.log('Resize not available on this container type');
+    }
+    
+    // Set background (may not work on all container types)
+    if (container.fills !== figma.mixed && container.fills !== undefined) {
+      try {
+        container.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 1 }, opacity: 0.5 }];
+        console.log('Set container background');
+      } catch (fillError) {
+        console.log('Could not set container background:', fillError.message);
+      }
+    }
+  } catch (error) {
+    console.error('Error setting container properties:', error);
+    throw error;
   }
 
   // Store metadata on container
-  container.setPluginData('pageDesigns', 'true');
-  container.setPluginData('sitemapText', nodes.map(n => '  '.repeat(n.depth) + n.name).join('\n'));
-  container.setPluginData('createdAt', new Date().toISOString());
-  container.setPluginData('pageCount', nodes.length.toString());
-  container.setPluginData('frameWidth', frameWidth.toString());
-  container.setPluginData('frameHeight', frameHeight.toString());
+  try {
+    container.setPluginData('pageDesigns', 'true');
+    container.setPluginData('sitemapText', nodes.map(n => '  '.repeat(n.depth) + n.name).join('\n'));
+    container.setPluginData('createdAt', new Date().toISOString());
+    container.setPluginData('pageCount', nodes.length.toString());
+    container.setPluginData('frameWidth', frameWidth.toString());
+    container.setPluginData('frameHeight', frameHeight.toString());
+    console.log('Stored metadata on container');
+  } catch (error) {
+    console.error('Error storing metadata:', error);
+  }
 
   console.log('Creating', nodes.length, 'page design frames...');
 
   // Create a frame for each page
   for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    const pos = positions[i];
+    try {
+      const node = nodes[i];
+      const pos = positions[i];
+      console.log(`Creating frame ${i + 1}/${nodes.length}: ${node.name}`);
 
-    // Create frame
-    const frame = figma.createFrame();
-    frame.name = node.name;
-    frame.x = pos.x + PADDING;
-    frame.y = pos.y + PADDING;
-    frame.resize(frameWidth, frameHeight);
+      // Create frame
+      const frame = figma.createFrame();
+      frame.name = node.name;
+      frame.x = pos.x + PADDING;
+      frame.y = pos.y + PADDING;
+      frame.resize(frameWidth, frameHeight);
+      console.log(`  Frame created and positioned`);
 
-    // Add background fill
-    frame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+      // Add background fill
+      frame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+      console.log(`  Background set`);
 
-    // Store metadata on frame
-    frame.setPluginData('pageDepth', node.depth.toString());
-    frame.setPluginData('pageIndex', i.toString());
-    frame.setPluginData('pageName', node.name);
+      // Store metadata on frame
+      frame.setPluginData('pageDepth', node.depth.toString());
+      frame.setPluginData('pageIndex', i.toString());
+      frame.setPluginData('pageName', node.name);
+      console.log(`  Metadata stored`);
 
-    // Add page title text
-    const titleText = figma.createText();
-    titleText.fontName = { family: "Inter", style: "Medium" };
-    titleText.characters = node.name;
-    titleText.fontSize = 32;
-    titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-    
-    // Position title
-    titleText.x = 60;
-    titleText.y = 60;
-    
-    frame.appendChild(titleText);
-
-    // Add hierarchy indicator if not root
-    if (node.depth > 0) {
-      const depthLabel = figma.createText();
-      depthLabel.fontName = { family: "Inter", style: "Regular" };
-      depthLabel.characters = `Level ${node.depth}`;
-      depthLabel.fontSize = 14;
-      depthLabel.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
-      depthLabel.x = 60;
-      depthLabel.y = 105;
+      // Add page title text
+      const titleText = figma.createText();
+      titleText.fontName = { family: "Inter", style: "Medium" };
+      titleText.characters = node.name;
+      titleText.fontSize = 32;
+      titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
       
-      frame.appendChild(depthLabel);
-    }
+      // Position title
+      titleText.x = 60;
+      titleText.y = 60;
+      
+      frame.appendChild(titleText);
+      console.log(`  Title text added`);
 
-    // Add to container
-    container.appendChild(frame);
-    pageFrames.push(frame);
+      // Add hierarchy indicator if not root
+      if (node.depth > 0) {
+        const depthLabel = figma.createText();
+        depthLabel.fontName = { family: "Inter", style: "Regular" };
+        depthLabel.characters = `Level ${node.depth}`;
+        depthLabel.fontSize = 14;
+        depthLabel.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
+        depthLabel.x = 60;
+        depthLabel.y = 105;
+        
+        frame.appendChild(depthLabel);
+        console.log(`  Depth label added`);
+      }
+
+      // Add to container
+      container.appendChild(frame);
+      pageFrames.push(frame);
+      console.log(`  Frame ${i + 1} complete and added to container`);
+    } catch (frameError) {
+      console.error(`Error creating frame ${i + 1}:`, frameError);
+      throw frameError;
+    }
   }
 
   console.log('Created', pageFrames.length, 'design frames in container');
