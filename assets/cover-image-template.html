@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sitemap Builder - Cover Image</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    .cover {
+      width: 1920px;
+      height: 960px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Left Side - Text Editor */
+    .left {
+      flex: 1;
+      padding: 80px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: #18A0FB;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      box-shadow: 0 8px 32px rgba(24, 160, 251, 0.3);
+    }
+    
+    .icon svg {
+      width: 50px;
+      height: 50px;
+    }
+    
+    h1 {
+      font-size: 64px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    
+    .subtitle {
+      font-size: 28px;
+      color: #4a5568;
+      margin-bottom: 48px;
+      font-weight: 400;
+    }
+    
+    .text-editor {
+      background: #2d3748;
+      border-radius: 12px;
+      padding: 32px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 20px;
+      line-height: 1.8;
+      color: #68d391;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+    }
+    
+    .text-editor .line {
+      margin-bottom: 8px;
+    }
+    
+    .text-editor .indent-1 {
+      padding-left: 40px;
+      color: #81e6d9;
+    }
+    
+    .text-editor .indent-2 {
+      padding-left: 80px;
+      color: #90cdf4;
+    }
+    
+    /* Right Side - Visual Sitemap */
+    .right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+    }
+    
+    .sitemap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;
+    }
+    
+    .node {
+      background: white;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3748;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      position: relative;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .node.root {
+      background: #fef3c7;
+      border-color: #fbbf24;
+      font-size: 22px;
+    }
+    
+    .node.child {
+      background: #dbeafe;
+      border-color: #3b82f6;
+    }
+    
+    .level-2 {
+      display: flex;
+      gap: 40px;
+      position: relative;
+    }
+    
+    .level-3 {
+      display: flex;
+      gap: 32px;
+      margin-top: 60px;
+    }
+    
+    /* Connector Lines */
+    .connector {
+      position: absolute;
+      background: #cbd5e0;
+      z-index: -1;
+    }
+    
+    .connector.vertical {
+      width: 3px;
+      height: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 100%;
+    }
+    
+    .connector.horizontal {
+      height: 3px;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .badge {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      background: #18A0FB;
+      color: white;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(24, 160, 251, 0.4);
+    }
+    
+    @media print {
+      body {
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <!-- Left Side: Text Editor -->
+    <div class="left">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="white">
+          <rect x="8" y="2" width="8" height="4" rx="1"/>
+          <line x1="12" y1="6" x2="12" y2="10" stroke="white" stroke-width="1.5"/>
+          <line x1="12" y1="10" x2="6" y2="10" stroke="white" stroke-width="1.5"/>
+          <line x1="12" y1="10" x2="18" y2="10" stroke="white" stroke-width="1.5"/>
+          <line x1="6" y1="10" x2="6" y2="13" stroke="white" stroke-width="1.5"/>
+          <rect x="3" y="13" width="6" height="3" rx="0.5"/>
+          <line x1="18" y1="10" x2="18" y2="13" stroke="white" stroke-width="1.5"/>
+          <rect x="15" y="13" width="6" height="3" rx="0.5"/>
+          <line x1="6" y1="16" x2="6" y2="19" stroke="white" stroke-width="1.5"/>
+          <line x1="6" y1="19" x2="4" y2="19" stroke="white" stroke-width="1.5"/>
+          <line x1="6" y1="19" x2="8" y2="19" stroke="white" stroke-width="1.5"/>
+          <rect x="2.5" y="19" width="3" height="2.5" rx="0.5"/>
+          <rect x="6.5" y="19" width="3" height="2.5" rx="0.5"/>
+        </svg>
+      </div>
+      
+      <h1>Sitemap Builder</h1>
+      <div class="subtitle">Create visual sitemaps from simple text</div>
+      
+      <div class="text-editor">
+        <div class="line">Home</div>
+        <div class="line indent-1">About Us</div>
+        <div class="line indent-1">Services</div>
+        <div class="line indent-2">Web Design</div>
+        <div class="line indent-2">Branding</div>
+        <div class="line indent-2">Marketing</div>
+        <div class="line indent-1">Portfolio</div>
+        <div class="line indent-1">Contact</div>
+      </div>
+    </div>
+    
+    <!-- Right Side: Visual Sitemap -->
+    <div class="right">
+      <div class="sitemap">
+        <!-- Root Node -->
+        <div class="node root" style="position: relative;">
+          Home
+          <div class="connector vertical"></div>
+        </div>
+        
+        <!-- Level 2 -->
+        <div class="level-2">
+          <div class="node child" style="position: relative;">
+            About Us
+          </div>
+          <div class="node child" style="position: relative;">
+            Services
+            <div class="connector vertical"></div>
+          </div>
+          <div class="node child">
+            Portfolio
+          </div>
+          <div class="node child">
+            Contact
+          </div>
+        </div>
+        
+        <!-- Level 3 under Services -->
+        <div class="level-3">
+          <div class="node child" style="font-size: 16px;">Web Design</div>
+          <div class="node child" style="font-size: 16px;">Branding</div>
+          <div class="node child" style="font-size: 16px;">Marketing</div>
+        </div>
+      </div>
+      
+      <div class="badge">✨ Auto-Layout · Native Connectors · Export Ready</div>
+    </div>
+  </div>
+
+  <script>
+    // Instructions for user
+    console.log("📸 To capture this as your cover image:");
+    console.log("1. Press Cmd+Shift+4 (Mac) or use Snipping Tool (Windows)");
+    console.log("2. Select the entire gray rectangle");
+    console.log("3. Save as 'cover-image.png'");
+    console.log("4. Make sure it's 1920x960px");
+    console.log("");
+    console.log("Or use browser's screenshot feature:");
+    console.log("Chrome: Inspect → Cmd+Shift+P → 'Capture screenshot'");
+  </script>
+</body>
+</html>
+

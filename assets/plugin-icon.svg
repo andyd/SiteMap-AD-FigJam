@@ -1,0 +1,34 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="#18A0FB"/>
+  
+  <!-- Top Node (Root) -->
+  <rect x="48" y="20" width="32" height="20" rx="4" fill="white"/>
+  
+  <!-- Connector Lines -->
+  <line x1="64" y1="40" x2="64" y2="52" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="64" y1="52" x2="40" y2="52" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="64" y1="52" x2="88" y2="52" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Left Middle Node -->
+  <line x1="40" y1="52" x2="40" y2="64" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <rect x="24" y="64" width="32" height="20" rx="4" fill="white"/>
+  
+  <!-- Right Middle Node -->
+  <line x1="88" y1="52" x2="88" y2="64" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <rect x="72" y="64" width="32" height="20" rx="4" fill="white"/>
+  
+  <!-- Bottom Connectors from Left Node -->
+  <line x1="40" y1="84" x2="40" y2="96" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="40" y1="96" x2="28" y2="96" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="40" y1="96" x2="52" y2="96" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Bottom Left Node -->
+  <line x1="28" y1="96" x2="28" y2="104" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <rect x="16" y="104" width="24" height="16" rx="3" fill="white" fill-opacity="0.9"/>
+  
+  <!-- Bottom Right Node -->
+  <line x1="52" y1="96" x2="52" y2="104" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <rect x="44" y="104" width="24" height="16" rx="3" fill="white" fill-opacity="0.9"/>
+</svg>
+
